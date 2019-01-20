@@ -1,13 +1,25 @@
-import edu.princeton.cs.algs4.*;
+import edu.princeton.cs.algs4.BreadthFirstDirectedPaths;
+import edu.princeton.cs.algs4.Digraph;
+import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.StdIn;
+import edu.princeton.cs.algs4.In;
 
-public class SAP
+public final class SAP
 {
-  private Digraph digraph;
+  private final Digraph digraph;
 
   // constructor takes a digraph (not necessarily a DAG)
   public SAP(Digraph G)
   {
-    digraph = G;
+    digraph = new Digraph(G.V());
+
+    for (int v = 0; v < G.V(); v++)
+    {
+      for (int w : G.adj(v))
+      {
+        digraph.addEdge(v, w);
+      }
+    }
   }
 
   // ancestor which participates in shortest path between BFDPs.
@@ -39,9 +51,53 @@ public class SAP
     return bfv.distTo(ancestor) + bfw.distTo(ancestor);
   }
 
+  private void validateVertex(int v)
+  {
+    if (v < 0 || v >= digraph.V())
+    {
+      throw new IllegalArgumentException("Invalid vertex v");
+    }
+  }
+
+  private void validateVertices(int v, int w)
+  {
+    validateVertex(v);
+    validateVertex(w);
+  }
+
+  private void validateVertices(Iterable<Integer> v, Iterable<Integer> w)
+  {
+
+    if (v == null || w == null)
+    {
+      throw new IllegalArgumentException("v == null || w == null");
+    }
+
+    for (Integer elem : v)
+    {
+      if (elem == null)
+      {
+        throw new IllegalArgumentException("v == null");
+      }
+      validateVertex(elem);
+    }
+
+    for (Integer elem : w)
+    {
+      if (elem == null)
+      {
+        throw new IllegalArgumentException("w == null");
+      }
+      validateVertex(elem);
+    }
+  }
+
+
   // length of shortest ancestral path between v and w; -1 if no such path
   public int length(int v, int w)
   {
+    validateVertices(v, w);
+
     BreadthFirstDirectedPaths bfV = new BreadthFirstDirectedPaths(digraph, v);
     BreadthFirstDirectedPaths bfW = new BreadthFirstDirectedPaths(digraph, w);
 
@@ -51,6 +107,8 @@ public class SAP
   // a common ancestor of v and w that participates in a shortest ancestral path; -1 if no such path
   public int ancestor(int v, int w)
   {
+    validateVertices(v, w);
+
     BreadthFirstDirectedPaths bfV = new BreadthFirstDirectedPaths(digraph, v);
     BreadthFirstDirectedPaths bfW = new BreadthFirstDirectedPaths(digraph, w);
 
@@ -60,6 +118,8 @@ public class SAP
   // length of shortest ancestral path between any vertex in v and any vertex in w; -1 if no such path
   public int length(Iterable<Integer> v, Iterable<Integer> w)
   {
+    validateVertices(v, w);
+
     BreadthFirstDirectedPaths bfV = new BreadthFirstDirectedPaths(digraph, v);
     BreadthFirstDirectedPaths bfW = new BreadthFirstDirectedPaths(digraph, w);
 
@@ -69,13 +129,14 @@ public class SAP
   // a common ancestor that participates in shortest ancestral path; -1 if no such path
   public int ancestor(Iterable<Integer> v, Iterable<Integer> w)
   {
+    validateVertices(v, w);
+
     BreadthFirstDirectedPaths bfV = new BreadthFirstDirectedPaths(digraph, v);
     BreadthFirstDirectedPaths bfW = new BreadthFirstDirectedPaths(digraph, w);
 
     return sapAncestor(bfV, bfW);
   }
 
-  // do unit testing of this class
   // do unit testing of this class
   public static void main(String[] args) {
     In in = new In(args[0]);

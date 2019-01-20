@@ -1,86 +1,128 @@
-import edu.princeton.cs.algs4.*;
+import edu.princeton.cs.algs4.Digraph;
+import edu.princeton.cs.algs4.DirectedCycle;
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.ST;
 
-public class SymbolDiGraph
+import java.util.ArrayList;
+
+final class SymbolDiGraph
 {
-  private ST<Integer, Integer> synIdToVertexIdMap; // id -> vertex-id
-  private Integer[] vertexIdToSynIdArray; // vertex-id -> id
-  private ST<String, Integer> nounToSynIdMap; // noun -> id
-  private ST<Integer, String> synIdToSynsetStrMap; // id -> synset
-  private SAP sap;
+  private final ArrayList<String> synsetList;
+  private final ST<String, ArrayList<Integer>> nounToSynIdsMap; // noun -> synIds
+  private final SAP sap;
+  private final Digraph digraph;
 
-  public SymbolDiGraph(String synsets, String hypernyms, String delimiter)
+  SymbolDiGraph(String synsets, String hypernyms, String delimiter)
   {
-    synIdToVertexIdMap = new ST<>();
-    nounToSynIdMap = new ST<>();
-    synIdToSynsetStrMap = new ST<>();
+    nounToSynIdsMap = new ST<>();
+    synsetList = new ArrayList<>();
 
     In in = new In(synsets);
     while (in.hasNextLine())
     {
       String[] a = in.readLine().split(delimiter);
-      Integer synId = Integer.parseInt(a[0]);
-      String synsetStr = a[1];
+      String synset = a[1];
+      int synId = Integer.parseInt(a[0]);
 
-      synIdToVertexIdMap.put(synId, synIdToVertexIdMap.size());
-      synIdToSynsetStrMap.put(synId, synsetStr);
+      synsetList.add(synset);
 
-      // for separate collection of nounToSynIdMap
-      for (String eachNoun : synsetStr.split(" "))
+      // for separate collection of nounToSynIdsMap
+      for (String noun : synset.split(" "))
       {
-        nounToSynIdMap.put(eachNoun, synId);
+        ArrayList<Integer> nounIds = nounToSynIdsMap.get(noun);
+        if (nounIds != null)
+        {
+          nounIds.add(synId);
+        }
+        else
+        {
+          nounIds = new ArrayList<>();
+          nounIds.add(synId);
+          nounToSynIdsMap.put(noun, nounIds);
+        }
       }
     }
 
-    // inverted index to get string vertexIdToSynIdArray in an array
-    // int to synset conversion
-    vertexIdToSynIdArray = new Integer[synIdToVertexIdMap.size()];
-    for (Integer synId : synIdToVertexIdMap.keys())
-    {
-      vertexIdToSynIdArray[synIdToVertexIdMap.get(synId)] = synId;
-    }
+    digraph = new Digraph(synsetList.size());
+    In hypernymsHandle = new In(hypernyms);
 
-    // second pass builds the digraph by connecting first vertex on each
-    // line to all others
-    Digraph diGraph = new Digraph(synIdToVertexIdMap.size());
-    in = new In(hypernyms);
-    while (in.hasNextLine())
+    while(hypernymsHandle.hasNextLine())
     {
-      String[] a = in.readLine().split(delimiter);
+      String[] a = hypernymsHandle.readLine().split(delimiter);
+      int v = Integer.parseInt(a[0]);
 
-      int v = synIdToVertexIdMap.get(Integer.parseInt(a[0]));
-      for (int i = 1; i < a.length; i++)
+      for (int index = 1; index < a.length; ++index)
       {
-        int w = synIdToVertexIdMap.get(Integer.parseInt(a[i]));
-        diGraph.addEdge(v, w);
+        int w = Integer.parseInt(a[index]);
+        digraph.addEdge(v, w);
       }
     }
 
-    sap = new SAP(diGraph);
+    // Cycle detection
+    DirectedCycle dc = new DirectedCycle(digraph);
+    if (dc.hasCycle())
+    {
+      throw new IllegalArgumentException("dc.hasCycle()");
+    }
+
+    // Single root validation
+    validateSingleRooted(digraph);
+
+    sap = new SAP(digraph);
   }
 
-  public Iterable<String> nouns()
+  Iterable<String> nouns()
   {
-    return nounToSynIdMap.keys();
+    ArrayList<String> al = new ArrayList<>();
+    Iterable<String> nounIts = nounToSynIdsMap.keys();
+    nounIts.forEach(al::add);
+
+    return al;
   }
 
-  public boolean isNoun(String word)
+  private void validateSingleRooted(Digraph dg)
   {
-    return nounToSynIdMap.get(word) != null;
+    // Single root detection
+    int roots = 0;
+    for (int index = 0; index < dg.V(); ++index)
+    {
+      if (dg.outdegree(index) == 0)
+      {
+        roots++;
+      }
+    }
+
+    if (roots != 1)
+    {
+      throw new IllegalArgumentException("Not single rooted!");
+    }
   }
 
-  public int distance(String nounA, String nounB)
+  private void validateNouns(String nounA, String nounB)
   {
-    int v = synIdToVertexIdMap.get(nounToSynIdMap.get(nounA));
-    int w = synIdToVertexIdMap.get(nounToSynIdMap.get(nounB));
-    return sap.length(v, w);
+    // null check is done in ST.get()
+    if (!isNoun(nounA) || !isNoun(nounB))
+    {
+      throw new IllegalArgumentException("Not nouns");
+    }
+  }
+
+  boolean isNoun(String word)
+  {
+    return nounToSynIdsMap.get(word) != null;
+  }
+
+  int distance(String nounA, String nounB)
+  {
+    validateNouns(nounA, nounB);
+    return sap.length(nounToSynIdsMap.get(nounA), nounToSynIdsMap.get(nounB));
   }
 
   // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
   // in a shortest ancestral path (defined below)
-  public String sap(String nounA, String nounB)
+  String sap(String nounA, String nounB)
   {
-    int v = synIdToVertexIdMap.get(nounToSynIdMap.get(nounA));
-    int w = synIdToVertexIdMap.get(nounToSynIdMap.get(nounB));
-    return synIdToSynsetStrMap.get(vertexIdToSynIdArray[sap.ancestor(v, w)]);
+    validateNouns(nounA, nounB);
+    return synsetList.get(sap.ancestor(nounToSynIdsMap.get(nounA), nounToSynIdsMap.get(nounB)));
   }
 }
