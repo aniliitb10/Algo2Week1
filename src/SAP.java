@@ -1,4 +1,3 @@
-import edu.princeton.cs.algs4.BreadthFirstDirectedPaths;
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.StdIn;
@@ -6,30 +5,22 @@ import edu.princeton.cs.algs4.In;
 
 public final class SAP
 {
-  private final Digraph digraph;
+  private final MyDigraph myDigraph;
 
   // constructor takes a digraph (not necessarily a DAG)
   public SAP(Digraph G)
   {
-    digraph = new Digraph(G.V());
-
-    for (int v = 0; v < G.V(); v++)
-    {
-      for (int w : G.adj(v))
-      {
-        digraph.addEdge(v, w);
-      }
-    }
+    myDigraph = new MyDigraph(G);
   }
 
   // ancestor which participates in shortest path between BFDPs.
   // if no such ancestor, then returns -1
-  private int sapAncestor(BreadthFirstDirectedPaths bfv, BreadthFirstDirectedPaths bfw)
+  private int sapAncestor(MyBreadthFirstDirPaths bfv, MyBreadthFirstDirPaths bfw)
   {
     int shortestPathLength = Integer.MAX_VALUE;
     int ancestor = -1;
 
-    for (int vertex = 0; vertex < digraph.V(); vertex++)
+    for (int vertex = 0; vertex < myDigraph.getVertices(); vertex++)
     {
       if (bfv.hasPathTo(vertex) && bfw.hasPathTo(vertex))
       {
@@ -45,7 +36,7 @@ public final class SAP
     return ancestor;
   }
 
-  private int sapAncestorPathLength(BreadthFirstDirectedPaths bfv, BreadthFirstDirectedPaths bfw, int ancestor)
+  private int sapAncestorPathLength(MyBreadthFirstDirPaths bfv, MyBreadthFirstDirPaths bfw, int ancestor)
   {
     if (ancestor == -1) return -1;
     return bfv.distTo(ancestor) + bfw.distTo(ancestor);
@@ -53,7 +44,7 @@ public final class SAP
 
   private void validateVertex(int v)
   {
-    if (v < 0 || v >= digraph.V())
+    if (v < 0 || v >= myDigraph.getVertices())
     {
       throw new IllegalArgumentException("Invalid vertex v");
     }
@@ -92,14 +83,13 @@ public final class SAP
     }
   }
 
-
   // length of shortest ancestral path between v and w; -1 if no such path
   public int length(int v, int w)
   {
     validateVertices(v, w);
 
-    BreadthFirstDirectedPaths bfV = new BreadthFirstDirectedPaths(digraph, v);
-    BreadthFirstDirectedPaths bfW = new BreadthFirstDirectedPaths(digraph, w);
+    MyBreadthFirstDirPaths bfV = new MyBreadthFirstDirPaths(myDigraph, v);
+    MyBreadthFirstDirPaths bfW = new MyBreadthFirstDirPaths(myDigraph, w);
 
     return sapAncestorPathLength(bfV, bfW, sapAncestor(bfV, bfW));
   }
@@ -109,8 +99,8 @@ public final class SAP
   {
     validateVertices(v, w);
 
-    BreadthFirstDirectedPaths bfV = new BreadthFirstDirectedPaths(digraph, v);
-    BreadthFirstDirectedPaths bfW = new BreadthFirstDirectedPaths(digraph, w);
+    MyBreadthFirstDirPaths bfV = new MyBreadthFirstDirPaths(myDigraph, v);
+    MyBreadthFirstDirPaths bfW = new MyBreadthFirstDirPaths(myDigraph, w);
 
     return sapAncestor(bfV, bfW);
   }
@@ -120,8 +110,8 @@ public final class SAP
   {
     validateVertices(v, w);
 
-    BreadthFirstDirectedPaths bfV = new BreadthFirstDirectedPaths(digraph, v);
-    BreadthFirstDirectedPaths bfW = new BreadthFirstDirectedPaths(digraph, w);
+    MyBreadthFirstDirPaths bfV = new MyBreadthFirstDirPaths(myDigraph, v);
+    MyBreadthFirstDirPaths bfW = new MyBreadthFirstDirPaths(myDigraph, w);
 
     return sapAncestorPathLength(bfV, bfW, sapAncestor(bfV, bfW));
   }
@@ -131,8 +121,8 @@ public final class SAP
   {
     validateVertices(v, w);
 
-    BreadthFirstDirectedPaths bfV = new BreadthFirstDirectedPaths(digraph, v);
-    BreadthFirstDirectedPaths bfW = new BreadthFirstDirectedPaths(digraph, w);
+    MyBreadthFirstDirPaths bfV = new MyBreadthFirstDirPaths(myDigraph, v);
+    MyBreadthFirstDirPaths bfW = new MyBreadthFirstDirPaths(myDigraph, w);
 
     return sapAncestor(bfV, bfW);
   }

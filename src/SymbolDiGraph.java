@@ -1,5 +1,3 @@
-import edu.princeton.cs.algs4.Digraph;
-import edu.princeton.cs.algs4.DirectedCycle;
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.ST;
 
@@ -10,7 +8,7 @@ final class SymbolDiGraph
   private final ArrayList<String> synsetList;
   private final ST<String, ArrayList<Integer>> nounToSynIdsMap; // noun -> synIds
   private final SAP sap;
-  private final Digraph digraph;
+  private final MyDigraph myDigraph;
 
   SymbolDiGraph(String synsets, String hypernyms, String delimiter)
   {
@@ -43,32 +41,23 @@ final class SymbolDiGraph
       }
     }
 
-    digraph = new Digraph(synsetList.size());
-    In hypernymsHandle = new In(hypernyms);
-
-    while(hypernymsHandle.hasNextLine())
-    {
-      String[] a = hypernymsHandle.readLine().split(delimiter);
-      int v = Integer.parseInt(a[0]);
-
-      for (int index = 1; index < a.length; ++index)
-      {
-        int w = Integer.parseInt(a[index]);
-        digraph.addEdge(v, w);
-      }
-    }
+    myDigraph = new MyDigraph(hypernyms, synsetList.size());
 
     // Cycle detection
-    DirectedCycle dc = new DirectedCycle(digraph);
+    MyCycleDetection dc = new MyCycleDetection(myDigraph);
     if (dc.hasCycle())
     {
       throw new IllegalArgumentException("dc.hasCycle()");
     }
 
     // Single root validation
-    validateSingleRooted(digraph);
+    MyCycleDetection cd = new MyCycleDetection(myDigraph);
+    if (cd.hasCycle())
+    {
+      throw new IllegalArgumentException();
+    }
 
-    sap = new SAP(digraph);
+    sap = new SAP(myDigraph.getDigraph());
   }
 
   Iterable<String> nouns()
@@ -80,41 +69,8 @@ final class SymbolDiGraph
     return al;
   }
 
-  private void validateSingleRooted(Digraph dg)
-  {
-    // Single root detection
-    int roots = 0;
-    for (int index = 0; index < dg.V(); ++index)
-    {
-      if (dg.outdegree(index) == 0)
-      {
-        roots++;
-      }
-    }
-
-    if (roots != 1)
-    {
-      throw new IllegalArgumentException("Not single rooted!");
-    }
-  }
-
-  private void validateNouns(String nounA, String nounB)
-  {
-    // null check is done in ST.get()
-    if (!isNoun(nounA) || !isNoun(nounB))
-    {
-      throw new IllegalArgumentException("Not nouns");
-    }
-  }
-
-  boolean isNoun(String word)
-  {
-    return nounToSynIdsMap.get(word) != null;
-  }
-
   int distance(String nounA, String nounB)
   {
-    validateNouns(nounA, nounB);
     return sap.length(nounToSynIdsMap.get(nounA), nounToSynIdsMap.get(nounB));
   }
 
@@ -122,7 +78,11 @@ final class SymbolDiGraph
   // in a shortest ancestral path (defined below)
   String sap(String nounA, String nounB)
   {
-    validateNouns(nounA, nounB);
     return synsetList.get(sap.ancestor(nounToSynIdsMap.get(nounA), nounToSynIdsMap.get(nounB)));
+  }
+
+  public boolean isNoun(String word)
+  {
+    return nounToSynIdsMap.get(word) != null;
   }
 }
