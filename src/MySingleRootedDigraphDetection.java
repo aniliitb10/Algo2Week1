@@ -6,7 +6,7 @@ class MySingleRootedDigraphDetection
   {
     int rootCounter = 0;
 
-    for (int vertex = 0;vertex < myDigraph.getVertices(); ++vertex)
+    for (int vertex = 0; vertex < myDigraph.getVertices(); ++vertex)
     {
       if (myDigraph.getOutDegree(vertex) == 0)
       {

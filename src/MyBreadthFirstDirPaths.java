@@ -3,17 +3,17 @@ import edu.princeton.cs.algs4.Queue;
 class MyBreadthFirstDirPaths
 {
   private static final int INFINITY = Integer.MAX_VALUE;
-  private final int vertices;
+  private final int verticesCount;
   private final boolean[] visited;
   private final int[] distTo;
 
   MyBreadthFirstDirPaths(MyDigraph myDigraph, int source)
   {
-    vertices = myDigraph.getVertices();
-    visited = new boolean[this.vertices];
-    distTo = new int[this.vertices];
+    verticesCount = myDigraph.getVertices();
+    visited = new boolean[this.verticesCount];
+    distTo = new int[this.verticesCount];
 
-    for (int index = 0; index < vertices; ++index)
+    for (int index = 0; index < verticesCount; ++index)
     {
       distTo[index] = INFINITY;
     }
@@ -24,9 +24,9 @@ class MyBreadthFirstDirPaths
 
   MyBreadthFirstDirPaths(MyDigraph myDigraph, Iterable<Integer> sources)
   {
-    vertices = myDigraph.getVertices();
-    visited = new boolean[this.vertices];
-    distTo = new int[this.vertices];
+    verticesCount = myDigraph.getVertices();
+    visited = new boolean[this.verticesCount];
+    distTo = new int[this.verticesCount];
 
     for (int index = 0; index < distTo.length; ++index)
     {
@@ -61,15 +61,15 @@ class MyBreadthFirstDirPaths
     }
   }
 
-  private void bfs(MyDigraph myDigraph, Iterable<Integer> vertices)
+  private void bfs(MyDigraph myDigraph, Iterable<Integer> sources)
   {
     Queue<Integer> queuedVertices = new Queue<>();
 
-    for (Integer vertex : vertices)
+    for (int source : sources)
     {
-      queuedVertices.enqueue(vertex);
-      visited[vertex] = true;
-      distTo[vertex] = 0;
+      queuedVertices.enqueue(source);
+      visited[source] = true;
+      distTo[source] = 0;
     }
 
     while (!queuedVertices.isEmpty())
@@ -108,7 +108,7 @@ class MyBreadthFirstDirPaths
 
   private void validateVertex(int vertex)
   {
-    if (vertex < 0 || vertex >= vertices)
+    if (vertex < 0 || vertex >= verticesCount)
     {
       throw new IllegalArgumentException("from MyBreadthFirstDirPaths");
     }

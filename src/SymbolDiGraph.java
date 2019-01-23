@@ -8,7 +8,6 @@ final class SymbolDiGraph
   private final ArrayList<String> synsetList;
   private final ST<String, ArrayList<Integer>> nounToSynIdsMap; // noun -> synIds
   private final SAP sap;
-  private final MyDigraph myDigraph;
 
   SymbolDiGraph(String synsets, String hypernyms, String delimiter)
   {
@@ -41,7 +40,7 @@ final class SymbolDiGraph
       }
     }
 
-    myDigraph = new MyDigraph(hypernyms, synsetList.size());
+    MyDigraph myDigraph = new MyDigraph(hypernyms, synsetList.size());
 
     // Cycle detection
     MyCycleDetection dc = new MyCycleDetection(myDigraph);
@@ -58,6 +57,12 @@ final class SymbolDiGraph
     }
 
     sap = new SAP(myDigraph.getDigraph());
+
+    MySingleRootedDigraphDetection msrdd = new MySingleRootedDigraphDetection(myDigraph);
+    if (!msrdd.hasSingleRoot())
+    {
+      throw new IllegalArgumentException("Not single rooted diagraph");
+    }
   }
 
   Iterable<String> nouns()
